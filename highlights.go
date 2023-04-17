@@ -37,9 +37,10 @@ func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service) {
 
 	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
 	if err != nil {
-		log.Fatalf("error occurred fething youtube video urls")
+		log.Fatalf("Error occurred fething youtube video urls")
 	}
 
+	fmt.Fprintln(out, "Found these matching highlights:")
 	for _, video := range videos {
 		videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%v", video.Id.VideoId)
 		fmt.Fprintf(out, videoURL+" : "+video.Snippet.Title+"\n")

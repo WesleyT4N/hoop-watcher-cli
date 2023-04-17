@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +16,22 @@ import (
 func main() {
 	youtubeClient := newYoutubeClient()
 	stdout := os.Stdout
-	hoop_watcher.GetHighlights("Knicks", stdout, youtubeClient)
+	team := scanTeam()
+	hoop_watcher.GetHighlights(team, stdout, youtubeClient)
+}
+
+func scanTeam() string {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Print("Enter the NBA team you want to get highlights for:\n> ")
+
+	scanner.Scan()
+	if scanner.Err() != nil {
+		log.Fatal("Error occurred parsing team")
+	}
+
+	team := scanner.Text()
+	return team
 }
 
 func newYoutubeClient() *youtube.Service {
