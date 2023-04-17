@@ -13,7 +13,7 @@ func TestHighlightQueryString(t *testing.T) {
 		date := time.Date(2023, time.January, 1, 0, 0, 0, 0, loc)
 		got := hoop_watcher.TeamHighlightQueryString("Knicks", date)
 
-		want := "Knicks NBA Highlights 2023-01-01"
+		want := "'Knicks NBA Full Game Highlights 2023-01-01'"
 		if got != want {
 			t.Errorf("got %s, want %s", got, want)
 		}
