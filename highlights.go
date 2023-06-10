@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"time"
 
 	"google.golang.org/api/youtube/v3"
@@ -30,8 +31,7 @@ func searchListByQ(service *youtube.Service, keywordQuery string) ([]*youtube.Se
 	return response.Items, nil
 }
 
-func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service) {
-
+func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service) []url.URL {
 	fmt.Fprintf(out, "Getting highlights for team: %s\n\n", team)
 	youtubeQueryString := TeamHighlightQueryString(team, time.Now())
 
@@ -41,8 +41,15 @@ func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service) {
 	}
 
 	fmt.Fprintln(out, "Found these matching highlights:")
-	for _, video := range videos {
+	var highlightUrls []url.URL
+	for i, video := range videos {
 		videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%v", video.Id.VideoId)
-		fmt.Fprintf(out, videoURL+" : "+video.Snippet.Title+"\n")
+		fmt.Fprintf(out, "[%d] %s : %s\n", i+1, videoURL, video.Snippet.Title)
+		parsedUrl, err := url.Parse(videoURL)
+		if err != nil {
+			log.Fatalf("Error parsing video URL")
+		}
+		highlightUrls = append(highlightUrls, *parsedUrl)
 	}
+	return highlightUrls
 }
