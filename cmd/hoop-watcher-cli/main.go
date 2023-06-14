@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 
 	hoop_watcher "github.com/WesleyT4N/hoop-watcher-cli"
 	"github.com/joho/godotenv"
@@ -16,11 +18,38 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+var SupportedDateFormats = []string{
+	"2006-01-02",
+	"2006-01",
+}
+
+func parseFlags() (time.Time, error) {
+	date := flag.String("d", "", "Date of the highlights to fetch in the format YYYY-MM-DD")
+	flag.Parse()
+	if *date != "" {
+		for _, format := range SupportedDateFormats {
+			gameDate, err := time.Parse(format, *date)
+			if err != nil {
+				continue
+			}
+			return gameDate, nil
+		}
+		return time.Now(), fmt.Errorf("Invalid date")
+	} else {
+		return time.Now(), nil
+	}
+}
+
 func main() {
 	youtubeClient := newYoutubeClient()
 	stdout := os.Stdout
+	date, err := parseFlags()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	team := scanTeam()
-	highlights := hoop_watcher.GetHighlights(team, stdout, youtubeClient)
+	highlights := hoop_watcher.GetHighlights(team, stdout, youtubeClient, date)
 	openHighlight(highlights)
 }
 
@@ -54,7 +83,6 @@ func scanTeam() string {
 	}
 
 	team := scanner.Text()
-	fmt.Println(team)
 	return team
 }
 

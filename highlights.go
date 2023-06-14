@@ -31,9 +31,9 @@ func searchListByQ(service *youtube.Service, keywordQuery string) ([]*youtube.Se
 	return response.Items, nil
 }
 
-func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service) []url.URL {
+func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service, time time.Time) []url.URL {
 	fmt.Fprintf(out, "Getting highlights for team: %s\n\n", team)
-	youtubeQueryString := TeamHighlightQueryString(team, time.Now())
+	youtubeQueryString := TeamHighlightQueryString(team, time)
 
 	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
 	if err != nil {
