@@ -25,6 +25,8 @@ var SupportedDateFormats = []string{
 	"2006-01",
 }
 
+var teamFilePath = "../../" + hoop_watcher.TeamFileName
+
 func parseDate(dateStr string) (time.Time, error) {
 	if dateStr == "" {
 		return time.Now(), nil
@@ -48,7 +50,7 @@ func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
 	if len(rawTeams) > 2 {
 		return nil, fmt.Errorf("Invalid number of teams given")
 	}
-	allTeams := hoop_watcher.GetNBATeams("../../nba_teams.json")
+	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
 	for _, team := range rawTeams {
 		parsedTeam := hoop_watcher.GetTeamFromQuery(team, allTeams)
 		if parsedTeam != nil {
@@ -130,7 +132,7 @@ func scanTeam() ([]hoop_watcher.NBATeam, error) {
 	}
 
 	team := scanner.Text()
-	allTeams := hoop_watcher.GetNBATeams("../../nba_teams.json")
+	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
 
 	parsedTeam := hoop_watcher.FuzzyGetTeamFromQuery(team, allTeams)
 	if parsedTeam == nil {

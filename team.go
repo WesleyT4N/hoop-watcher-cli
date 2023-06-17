@@ -14,6 +14,8 @@ type NBATeam struct {
 	Abbreviation string
 }
 
+const TeamFileName = "nba_teams.json"
+
 const teamFileLoadErrorMessage = "Error occurred loading NBA teams"
 
 func GetNBATeams(filePath string) []NBATeam {
