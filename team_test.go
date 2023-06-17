@@ -67,3 +67,52 @@ func TestGetTeamFromQuery(t *testing.T) {
 		}
 	})
 }
+
+func TestFuzzyGetTeamFromQuery(t *testing.T) {
+	t.Run("gets team from name", func(t *testing.T) {
+		cases := []getTeamFromQueryTestCase{
+			{
+				"NEW YORK KNICKS",
+				"New York Knicks",
+			},
+			{
+				"KNICKS",
+				"New York Knicks",
+			},
+			{
+				"knicks",
+				"New York Knicks",
+			},
+			{
+				"nyk",
+				"New York Knicks",
+			},
+			{
+				"ny knicks",
+				"New York Knicks",
+			},
+			{
+				"kncks",
+				"New York Knicks",
+			},
+			{
+				"ny",
+				"New York Knicks",
+			},
+			{
+				"nw yrk",
+				"New York Knicks",
+			},
+		}
+		for _, c := range cases {
+			got := hoop_watcher.FuzzyGetTeamFromQuery(c.Query, hoop_watcher.GetNBATeams("./nba_teams.json"))
+			want := c.ExpectedTeamName
+			if got == nil {
+				t.Errorf("got %v want %s", got, want)
+			}
+			if got.Name != want {
+				t.Errorf("got %v want %s with query %s", got.Name, want, c.Query)
+			}
+		}
+	})
+}

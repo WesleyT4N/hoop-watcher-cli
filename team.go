@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 type NBATeam struct {
@@ -30,6 +32,20 @@ func GetNBATeams(filePath string) []NBATeam {
 	return nbaTeams
 }
 
+func getTeamMatchTokens(team NBATeam) (teamToMatchTokens []string) {
+	lowerCaseTeamName := strings.ToLower(team.Name)
+	lowerCaseTeamAbbreviation := strings.ToLower(team.Abbreviation)
+	splitTeamName := strings.Split(lowerCaseTeamName, " ")
+	teamCity := strings.Join(splitTeamName[:len(splitTeamName)-1], " ")
+	shortenedTeamName := splitTeamName[len(splitTeamName)-1]
+	return []string{
+		lowerCaseTeamName,
+		lowerCaseTeamAbbreviation,
+		teamCity,
+		shortenedTeamName,
+	}
+}
+
 func queryMatchesTeam(query string, team NBATeam) bool {
 	lowerCaseQuery := strings.ToLower(query)
 	lowerCaseTeamName := strings.ToLower(team.Name)
@@ -45,6 +61,23 @@ func queryMatchesTeam(query string, team NBATeam) bool {
 		return true
 	}
 	return false
+}
+
+func FuzzyGetTeamFromQuery(query string, nbaTeams []NBATeam) *NBATeam {
+	matchTokensByTeam := map[NBATeam][]string{}
+	for _, team := range nbaTeams {
+		matchTokensByTeam[team] = getTeamMatchTokens(team)
+	}
+	var closestTeam NBATeam
+	maxMatches := 0
+	for team, matchTokens := range matchTokensByTeam {
+		matches := len(fuzzy.FindNormalizedFold(query, matchTokens))
+		if matches > maxMatches {
+			closestTeam = team
+			maxMatches = matches
+		}
+	}
+	return &closestTeam
 }
 
 func GetTeamFromQuery(query string, nbaTeams []NBATeam) *NBATeam {

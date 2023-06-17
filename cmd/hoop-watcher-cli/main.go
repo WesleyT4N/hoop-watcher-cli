@@ -131,7 +131,8 @@ func scanTeam() ([]hoop_watcher.NBATeam, error) {
 
 	team := scanner.Text()
 	allTeams := hoop_watcher.GetNBATeams("../../nba_teams.json")
-	parsedTeam := hoop_watcher.GetTeamFromQuery(team, allTeams)
+
+	parsedTeam := hoop_watcher.FuzzyGetTeamFromQuery(team, allTeams)
 	if parsedTeam == nil {
 		return nil, errors.New("Unknown team")
 	}
