@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"google.golang.org/api/youtube/v3"
@@ -12,9 +13,9 @@ import (
 
 const DAILY_DATE_FORMAT = "2006-01-02"
 
-func TeamHighlightQueryString(team string, reqTime time.Time) string {
+func TeamHighlightQueryString(teamNames []string, reqTime time.Time) string {
 	dateStr := reqTime.Format(DAILY_DATE_FORMAT)
-	return fmt.Sprintf("'%s NBA Full Game Highlights %s'", team, dateStr)
+	return fmt.Sprintf("'%s NBA Full Game Highlights %s'", strings.Join(teamNames, " vs "), dateStr)
 }
 
 // searchListByQ searches for videos based on a keyword query
@@ -31,9 +32,14 @@ func searchListByQ(service *youtube.Service, keywordQuery string) ([]*youtube.Se
 	return response.Items, nil
 }
 
-func GetHighlights(team string, out io.Writer, youtubeClient *youtube.Service, time time.Time) []url.URL {
-	fmt.Fprintf(out, "Getting highlights for team: %s\n\n", team)
-	youtubeQueryString := TeamHighlightQueryString(team, time)
+func GetHighlights(teams []NBATeam, out io.Writer, youtubeClient *youtube.Service, time time.Time) []url.URL {
+	teamNames := []string{}
+	for _, t := range teams {
+		teamNames = append(teamNames, t.Name)
+	}
+	fmt.Fprintf(out, "Getting highlights for the %v\n\n", strings.Join(teamNames, " vs "))
+	youtubeQueryString := TeamHighlightQueryString(teamNames, time)
+	fmt.Println(youtubeQueryString)
 
 	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
 	if err != nil {

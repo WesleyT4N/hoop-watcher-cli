@@ -14,8 +14,8 @@ type NBATeam struct {
 
 const teamFileLoadErrorMessage = "Error occurred loading NBA teams"
 
-func GetNBATeams() []NBATeam {
-	f, err := os.Open("nba_teams.json")
+func GetNBATeams(filePath string) []NBATeam {
+	f, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(teamFileLoadErrorMessage)
 	}
@@ -34,7 +34,7 @@ func queryMatchesTeam(query string, team NBATeam) bool {
 	lowerCaseQuery := strings.ToLower(query)
 	lowerCaseTeamName := strings.ToLower(team.Name)
 	lowerCaseTeamAbbreviation := strings.ToLower(team.Abbreviation)
-	if strings.Contains(lowerCaseQuery, lowerCaseTeamName) || strings.Contains(lowerCaseQuery, lowerCaseTeamAbbreviation) {
+	if strings.Contains(lowerCaseQuery, lowerCaseTeamName) || lowerCaseQuery == lowerCaseTeamAbbreviation {
 		return true
 	}
 

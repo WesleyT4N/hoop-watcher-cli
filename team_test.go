@@ -10,7 +10,7 @@ const NUMBER_OF_NBA_TEAMS = 30
 
 func TestGetTeams(t *testing.T) {
 	t.Run("it loads teams JSON file", func(t *testing.T) {
-		teams := hoop_watcher.GetNBATeams()
+		teams := hoop_watcher.GetNBATeams("./nba_teams.json")
 		if len(teams) != NUMBER_OF_NBA_TEAMS {
 			t.Errorf("expected %d number of teams but loaded %d", len(teams), NUMBER_OF_NBA_TEAMS)
 		}
@@ -56,7 +56,7 @@ func TestGetTeamFromQuery(t *testing.T) {
 			},
 		}
 		for _, c := range cases {
-			got := hoop_watcher.GetTeamFromQuery(c.Query, hoop_watcher.GetNBATeams())
+			got := hoop_watcher.GetTeamFromQuery(c.Query, hoop_watcher.GetNBATeams("./nba_teams.json"))
 			want := c.ExpectedTeamName
 			if got == nil {
 				t.Errorf("got %v want %s", got, want)

@@ -11,7 +11,7 @@ func TestHighlightQueryString(t *testing.T) {
 	t.Run("it generates Youtube Query string for team and date", func(t *testing.T) {
 		loc, _ := time.LoadLocation("Local")
 		date := time.Date(2023, time.January, 1, 0, 0, 0, 0, loc)
-		got := hoop_watcher.TeamHighlightQueryString("Knicks", date)
+		got := hoop_watcher.TeamHighlightQueryString([]string{"Knicks"}, date)
 
 		want := "'Knicks NBA Full Game Highlights 2023-01-01'"
 		if got != want {
