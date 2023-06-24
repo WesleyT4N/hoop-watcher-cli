@@ -22,7 +22,7 @@ type item struct {
 
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i item) FilterValue() string { return i.desc + i.title }
 
 func initialModel() model {
 	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
