@@ -15,6 +15,7 @@ import (
 	"time"
 
 	hoop_watcher "github.com/WesleyT4N/hoop-watcher-cli"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/googleapi/transport"
 	"google.golang.org/api/youtube/v3"
@@ -76,7 +77,7 @@ func parseFlags() (date time.Time, teams []hoop_watcher.NBATeam, err error) {
 	return date, teams, nil
 }
 
-func main() {
+func runCLI() {
 	youtubeClient := newYoutubeClient()
 	stdout := os.Stdout
 	date, teams, err := parseFlags()
@@ -99,6 +100,19 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+}
+
+func runTUI() {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
+	}
+}
+
+func main() {
+	// runCLI()
+	runTUI()
 }
 
 func openHighlight(highlights []url.URL) error {
