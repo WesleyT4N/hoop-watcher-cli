@@ -1,42 +1,74 @@
 package main
 
 import (
+	"log"
+	"time"
+
 	hoop_watcher "github.com/WesleyT4N/hoop-watcher-cli"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"google.golang.org/api/youtube/v3"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var (
+	docStyle  = lipgloss.NewStyle().Margin(1, 2)
+	tableSyle = table.DefaultStyles()
+)
 
 type model struct {
-	list         list.Model
-	teams        []hoop_watcher.NBATeam
-	cursor       int
-	selectedTeam hoop_watcher.NBATeam
+	list            list.Model
+	table           table.Model
+	hasSelectedTeam bool
+	highlights      map[Team][]hoop_watcher.Highlight
+	yt              *youtube.Service
 }
 
-type item struct {
-	title, desc string
+type Team struct {
+	team hoop_watcher.NBATeam
 }
 
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.desc + i.title }
+func (i Team) FilterValue() string { return i.team.Name + i.team.Abbreviation }
+func (i Team) Title() string       { return i.team.Abbreviation }
+func (i Team) Description() string { return i.team.Name }
 
-func initialModel() model {
+func initList() list.Model {
 	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
-	items := []list.Item{}
+	var items []list.Item
 	for _, team := range allTeams {
-		items = append(items, item{
-			title: team.Abbreviation,
-			desc:  team.Name,
+		items = append(items, Team{
+			team: team,
 		})
 	}
-	list := list.New(items, list.NewDefaultDelegate(), 0, 0)
-	list.Title = "Hoop Watcher CLI"
+
+	l := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	l.Title = "Hoop Watcher CLI"
+	l.SetShowStatusBar(true)
+	l.DisableQuitKeybindings()
+	return l
+}
+
+func initTable() table.Model {
+	columns := []table.Column{
+		{Title: "Video", Width: 100},
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithFocused(false),
+		table.WithHeight(3),
+	)
+	return t
+}
+
+func initialModel() model {
 	return model{
-		list: list,
+		list:            initList(),
+		table:           initTable(),
+		hasSelectedTeam: false,
+		highlights:      map[Team][]hoop_watcher.Highlight{},
+		yt:              newYoutubeClient(),
 	}
 }
 
@@ -44,23 +76,73 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+type highlightLookupMsg struct {
+	highlights []hoop_watcher.Highlight
+}
+
+func lookupHighlight(team hoop_watcher.NBATeam, yt *youtube.Service) tea.Cmd {
+	return func() tea.Msg {
+		return highlightLookupMsg{
+			highlights: hoop_watcher.GetHighlightsForTUI(team, time.Now(), yt),
+		}
+	}
+}
+
+func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
+	log.Printf("Msg: %T, %v\n", msg, msg)
+	log.Println(m.list.SelectedItem())
+	log.Println(m.hasSelectedTeam)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "enter":
+			selectedItem := m.list.SelectedItem()
+			if selectedItem != nil && !m.hasSelectedTeam {
+				selectedTeam := selectedItem.(Team)
+				m.hasSelectedTeam = true
+				return m, lookupHighlight(selectedTeam.team, m.yt)
+			}
+		case "esc":
+			m.list.ResetFilter()
+			if m.list.SelectedItem() != nil && m.hasSelectedTeam {
+				m.list.ResetSelected()
+				m.hasSelectedTeam = false
+			}
+			if m.table.Focused() {
+				m.table.Blur()
+				m.table.SetRows([]table.Row{})
+			}
 		}
+	case highlightLookupMsg:
+		highlights := msg.highlights
+		selectedTeam := m.list.SelectedItem().(Team)
+		m.highlights[selectedTeam] = highlights
+		var rows []table.Row
+		for _, h := range highlights {
+			rows = append(rows, table.Row{h.Title})
+		}
+		m.table.SetRows(rows)
+		m.table.Focus()
+		return m, nil
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
 
-	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
 }
 
 func (m model) View() string {
+	if m.hasSelectedTeam {
+		selectedTeam := m.list.SelectedItem().(Team)
+		if m.highlights[selectedTeam] != nil {
+			{
+				return docStyle.Render(m.table.View())
+			}
+		}
+	}
 	return docStyle.Render(m.list.View())
 }

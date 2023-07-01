@@ -103,6 +103,18 @@ func runCLI() {
 }
 
 func runTUI() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error occurred loading .env file")
+	}
+	if len(os.Getenv("DEBUG")) > 1 {
+		f, err := tea.LogToFile("debug.log", "[DEBUG]")
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	}
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
