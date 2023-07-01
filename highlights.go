@@ -12,9 +12,10 @@ import (
 )
 
 const DAILY_DATE_FORMAT = "2006-01-02"
+const HUMAN_DATE_FORMAT = "January 2, 2006"
 
 func TeamHighlightQueryString(teamNames []string, reqTime time.Time) string {
-	dateStr := reqTime.Format(DAILY_DATE_FORMAT)
+	dateStr := reqTime.Format(HUMAN_DATE_FORMAT)
 	return fmt.Sprintf("'%s NBA Full Game Highlights %s'", strings.Join(teamNames, " vs "), dateStr)
 }
 
@@ -30,6 +31,31 @@ func searchListByQ(service *youtube.Service, keywordQuery string) ([]*youtube.Se
 	}
 
 	return response.Items, nil
+}
+
+type Highlight struct {
+	Title string
+	URL   url.URL
+}
+
+func GetHighlightsForTUI(team NBATeam, time time.Time, youtubeClient *youtube.Service) (highlights []Highlight) {
+	teamNames := []string{}
+	teamNames = append(teamNames, team.Name)
+	youtubeQueryString := TeamHighlightQueryString(teamNames, time)
+	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
+	if err != nil {
+		log.Fatalf("Error occurred fething youtube video urls")
+	}
+
+	for _, video := range videos {
+		videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%v", video.Id.VideoId)
+		parsedUrl, err := url.Parse(videoURL)
+		if err != nil {
+			log.Fatalf("Error parsing video URL")
+		}
+		highlights = append(highlights, Highlight{Title: video.Snippet.Title, URL: *parsedUrl})
+	}
+	return highlights
 }
 
 func GetHighlights(teams []NBATeam, out io.Writer, youtubeClient *youtube.Service, time time.Time) []url.URL {
