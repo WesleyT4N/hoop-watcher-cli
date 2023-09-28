@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/exec"
 	"time"
 
 	hoop_watcher "github.com/WesleyT4N/hoop-watcher-cli"
@@ -52,6 +54,7 @@ func initList() list.Model {
 func initTable() table.Model {
 	columns := []table.Column{
 		{Title: "Video", Width: 100},
+		{Title: "URL", Width: 100},
 	}
 
 	t := table.New(
@@ -90,8 +93,8 @@ func lookupHighlight(team hoop_watcher.NBATeam, yt *youtube.Service) tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
 	log.Printf("Msg: %T, %v\n", msg, msg)
-	log.Println(m.list.SelectedItem())
-	log.Println(m.hasSelectedTeam)
+	log.Printf("Selected Team: %v\n", m.list.SelectedItem())
+	log.Printf("Has Selected: %v\n", m.hasSelectedTeam)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -99,10 +102,15 @@ func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			selectedItem := m.list.SelectedItem()
-			if selectedItem != nil && !m.hasSelectedTeam {
+			if selectedItem != nil && !m.hasSelectedTeam && !m.list.SettingFilter() {
 				selectedTeam := selectedItem.(Team)
 				m.hasSelectedTeam = true
 				return m, lookupHighlight(selectedTeam.team, m.yt)
+			} else if m.table.Focused() {
+				cmd := exec.Command("open", m.table.SelectedRow()[1])
+				if cmd.Run() != nil {
+					os.Exit(1)
+				}
 			}
 		case "esc":
 			m.list.ResetFilter()
@@ -112,7 +120,6 @@ func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
 			}
 			if m.table.Focused() {
 				m.table.Blur()
-				m.table.SetRows([]table.Row{})
 			}
 		}
 	case highlightLookupMsg:
@@ -121,7 +128,7 @@ func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
 		m.highlights[selectedTeam] = highlights
 		var rows []table.Row
 		for _, h := range highlights {
-			rows = append(rows, table.Row{h.Title})
+			rows = append(rows, table.Row{h.Title, h.URL.String()})
 		}
 		m.table.SetRows(rows)
 		m.table.Focus()
@@ -131,7 +138,11 @@ func (m model) Update(msg tea.Msg) (n tea.Model, cmd tea.Cmd) {
 		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
 
-	m.list, cmd = m.list.Update(msg)
+	if m.table.Focused() {
+		m.table, cmd = m.table.Update(msg)
+	} else {
+		m.list, cmd = m.list.Update(msg)
+	}
 	return m, cmd
 }
 
