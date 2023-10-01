@@ -14,16 +14,20 @@ import (
 const DAILY_DATE_FORMAT = "2006-01-02"
 const HUMAN_DATE_FORMAT = "January 2, 2006"
 
-func TeamHighlightQueryString(teamNames []string, reqTime time.Time) string {
+func TeamHighlightQueryStringWithDate(teamNames []string, reqTime time.Time) string {
 	dateStr := reqTime.Format(HUMAN_DATE_FORMAT)
 	return fmt.Sprintf("'%s NBA Full Game Highlights %s'", strings.Join(teamNames, " vs "), dateStr)
 }
 
+func TeamHighlightQueryString(teamNames []string) string {
+	return fmt.Sprintf("'%s NBA Full Game Highlights'", strings.Join(teamNames, " vs "))
+}
+
 // searchListByQ searches for videos based on a keyword query
-func searchListByQ(service *youtube.Service, keywordQuery string) ([]*youtube.SearchResult, error) {
+func searchListByQ(service *youtube.Service, keywordQuery string, maxResults int64) ([]*youtube.SearchResult, error) {
 	call := service.Search.List([]string{"id", "snippet"}).
 		Q(keywordQuery).
-		Type("video").MaxResults(3)
+		Type("video").MaxResults(maxResults)
 
 	response, err := call.Do()
 	if err != nil {
@@ -38,11 +42,19 @@ type Highlight struct {
 	URL   url.URL
 }
 
+func isHighlightVideoForTeam(searchResult *youtube.SearchResult, team NBATeam) bool {
+	teamMatchTokens := getTeamMatchTokens(team)
+	shortenedTeamName := teamMatchTokens[3]
+	videoTitle := strings.ToLower(searchResult.Snippet.Title)
+
+	return strings.Contains(videoTitle, shortenedTeamName) && strings.Contains(videoTitle, "highlights")
+}
+
 func GetHighlightsForTUI(team NBATeam, time time.Time, youtubeClient *youtube.Service) (highlights []Highlight) {
 	teamNames := []string{}
 	teamNames = append(teamNames, team.Name)
-	youtubeQueryString := TeamHighlightQueryString(teamNames, time)
-	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
+	youtubeQueryString := TeamHighlightQueryString(teamNames)
+	videos, err := searchListByQ(youtubeClient, youtubeQueryString, 5)
 	if err != nil {
 		log.Fatalf("Error occurred fething youtube video urls")
 	}
@@ -53,7 +65,9 @@ func GetHighlightsForTUI(team NBATeam, time time.Time, youtubeClient *youtube.Se
 		if err != nil {
 			log.Fatalf("Error parsing video URL")
 		}
-		highlights = append(highlights, Highlight{Title: video.Snippet.Title, URL: *parsedUrl})
+		if isHighlightVideoForTeam(video, team) {
+			highlights = append(highlights, Highlight{Title: video.Snippet.Title, URL: *parsedUrl})
+		}
 	}
 	return highlights
 }
@@ -64,10 +78,10 @@ func GetHighlights(teams []NBATeam, out io.Writer, youtubeClient *youtube.Servic
 		teamNames = append(teamNames, t.Name)
 	}
 	fmt.Fprintf(out, "Getting highlights for the %v\n\n", strings.Join(teamNames, " vs "))
-	youtubeQueryString := TeamHighlightQueryString(teamNames, time)
+	youtubeQueryString := TeamHighlightQueryStringWithDate(teamNames, time)
 	fmt.Println(youtubeQueryString)
 
-	videos, err := searchListByQ(youtubeClient, youtubeQueryString)
+	videos, err := searchListByQ(youtubeClient, youtubeQueryString, 5)
 	if err != nil {
 		log.Fatalf("Error occurred fething youtube video urls")
 	}
