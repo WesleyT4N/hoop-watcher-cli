@@ -60,7 +60,7 @@ func initTable() table.Model {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithFocused(false),
-		table.WithHeight(3),
+		table.WithHeight(10),
 	)
 	return t
 }
