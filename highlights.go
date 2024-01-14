@@ -78,9 +78,7 @@ func GetHighlights(teams []NBATeam, out io.Writer, youtubeClient *youtube.Servic
 		teamNames = append(teamNames, t.Name)
 	}
 	fmt.Fprintf(out, "Getting highlights for the %v\n\n", strings.Join(teamNames, " vs "))
-	youtubeQueryString := TeamHighlightQueryStringWithDate(teamNames, time)
-	fmt.Println(youtubeQueryString)
-
+	youtubeQueryString := TeamHighlightQueryString(teamNames)
 	videos, err := searchListByQ(youtubeClient, youtubeQueryString, 5)
 	if err != nil {
 		log.Fatalf("Error occurred fething youtube video urls")

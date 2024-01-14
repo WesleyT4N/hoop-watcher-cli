@@ -61,26 +61,33 @@ func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
 	return teams, nil
 }
 
-func parseFlags() (date time.Time, teams []hoop_watcher.NBATeam, err error) {
+func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, err error) {
+	tuiArg := flag.Bool("tui", false, "Use the TUI")
 	dateArg := flag.String("d", "", "Date of the highlights to fetch in the format YYYY-MM-DD")
-	teamsArg := flag.String("t", "", "Which teams are playing (max 2) joined by ','")
+	teamsArg := flag.String("tm", "", "Which teams are playing (max 2) joined by ','")
 	flag.Parse()
 
 	date, dateErr := parseDate(*dateArg)
 	if dateErr != nil {
-		return date, teams, dateErr
+		return *tuiArg, date, teams, dateErr
 	}
 	teams, teamErr := parseTeams(*teamsArg)
 	if teamErr != nil {
-		return date, teams, teamErr
+		return *tuiArg, date, teams, teamErr
 	}
-	return date, teams, nil
+	return *tuiArg, date, teams, nil
 }
 
 func runCLI() {
+	useTui, date, teams, err := parseFlags()
+	if useTui {
+		runTUI()
+		return
+	}
+
 	youtubeClient := newYoutubeClient()
 	stdout := os.Stdout
-	date, teams, err := parseFlags()
+
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -122,8 +129,7 @@ func runTUI() {
 }
 
 func main() {
-	// runCLI()
-	runTUI()
+	runCLI()
 }
 
 func openHighlight(highlights []url.URL) error {
