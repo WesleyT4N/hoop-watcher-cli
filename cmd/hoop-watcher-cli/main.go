@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -17,7 +17,7 @@ import (
 	hoop_watcher "github.com/WesleyT4N/hoop-watcher-cli"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
-	"google.golang.org/api/googleapi/transport"
+	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -179,11 +179,8 @@ func newYoutubeClient() *youtube.Service {
 	}
 
 	youtubeApiKey := os.Getenv("YOUTUBE_API_KEY")
-	youtubeClient, err := youtube.New(
-		&http.Client{
-			Transport: &transport.APIKey{Key: youtubeApiKey},
-		},
-	)
+	ctx := context.Background()
+	youtubeClient, err := youtube.NewService(ctx, option.WithAPIKey(youtubeApiKey))
 	if err != nil {
 		log.Fatal("Error occurred setting up Youtube Client")
 	}
