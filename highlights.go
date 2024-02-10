@@ -87,8 +87,8 @@ func GetHighlights(teams []NBATeam, out io.Writer, youtubeClient *youtube.Servic
 	fmt.Fprintln(out, "Found these matching highlights:")
 	var highlightUrls []url.URL
 	for i, video := range videos {
+		fmt.Fprintf(out, "[%d] %s | %s\n", i+1, video.Snippet.ChannelTitle, video.Snippet.Title)
 		videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%v", video.Id.VideoId)
-		fmt.Fprintf(out, "[%d] %s : %s\n", i+1, videoURL, video.Snippet.Title)
 		parsedUrl, err := url.Parse(videoURL)
 		if err != nil {
 			log.Fatalf("Error parsing video URL")

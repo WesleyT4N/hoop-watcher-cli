@@ -27,7 +27,7 @@ var SupportedDateFormats = []string{
 	"2006-01",
 }
 
-var teamFilePath = "./" + hoop_watcher.TeamFileName
+var teamFilePath = path.Join(os.Getenv("HOME"), "bin", hoop_watcher.TeamFileName)
 
 func parseDate(dateStr string) (time.Time, error) {
 	if dateStr == "" {
