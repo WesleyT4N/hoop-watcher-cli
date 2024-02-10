@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Atlanta Hawks",
+    "abbreviation": "ATL"
+  },
+  {
+    "name": "Boston Celtics",
+    "abbreviation": "BOS"
+  },
+  {
+    "name": "Brooklyn Nets",
+    "abbreviation": "BKN"
+  },
+  {
+    "name": "Charlotte Hornets",
+    "abbreviation": "CHA"
+  },
+  {
+    "name": "Chicago Bulls",
+    "abbreviation": "CHI"
+  },
+  {
+    "name": "Cleveland Cavaliers",
+    "abbreviation": "CLE"
+  },
+  {
+    "name": "Detroit Pistons",
+    "abbreviation": "DET"
+  },
+  {
+    "name": "Miami Heat",
+    "abbreviation": "MIA"
+  },
+  {
+    "name": "Milwaukee Bucks",
+    "abbreviation": "MIL"
+  },
+  {
+    "name": "New York Knicks",
+    "abbreviation": "NYK"
+  },
+  {
+    "name": "Orlando Magic",
+    "abbreviation": "ORL"
+  },
+  {
+    "name": "Philadelphia 76ers",
+    "abbreviation": "PHI"
+  },
+  {
+    "name": "Toronto Raptors",
+    "abbreviation": "TOR"
+  },
+  {
+    "name": "Washington Wizards",
+    "abbreviation": "WAS"
+  },
+  {
+    "name": "Dallas Mavericks",
+    "abbreviation": "DAL"
+  },
+  {
+    "name": "Denver Nuggets",
+    "abbreviation": "DEN"
+  },
+  {
+    "name": "Golden State Warriors",
+    "abbreviation": "GSW"
+  },
+  {
+    "name": "Houston Rockets",
+    "abbreviation": "HOU"
+  },
+  {
+    "name": "Indiana Pacers",
+    "abbreviation": "IND"
+  },
+  {
+    "name": "Los Angeles Clippers",
+    "abbreviation": "LAC"
+  },
+  {
+    "name": "Los Angeles Lakers",
+    "abbreviation": "LAL"
+  },
+  {
+    "name": "Memphis Grizzlies",
+    "abbreviation": "MEM"
+  },
+  {
+    "name": "Minnesota Timberwolves",
+    "abbreviation": "MIN"
+  },
+  {
+    "name": "New Orleans Pelicans",
+    "abbreviation": "NOP"
+  },
+  {
+    "name": "Oklahoma City Thunder",
+    "abbreviation": "OKC"
+  },
+  {
+    "name": "Phoenix Suns",
+    "abbreviation": "PHX"
+  },
+  {
+    "name": "Portland Trail Blazers",
+    "abbreviation": "POR"
+  },
+  {
+    "name": "Sacramento Kings",
+    "abbreviation": "SAC"
+  },
+  {
+    "name": "San Antonio Spurs",
+    "abbreviation": "SAS"
+  },
+  {
+    "name": "Utah Jazz",
+    "abbreviation": "UTA"
+  }
+]

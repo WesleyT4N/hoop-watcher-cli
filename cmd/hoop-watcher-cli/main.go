@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +27,7 @@ var SupportedDateFormats = []string{
 	"2006-01",
 }
 
-var teamFilePath = "../../" + hoop_watcher.TeamFileName
+var teamFilePath = "./" + hoop_watcher.TeamFileName
 
 func parseDate(dateStr string) (time.Time, error) {
 	if dateStr == "" {
@@ -110,7 +111,8 @@ func runCLI() {
 }
 
 func runTUI() {
-	if godotenv.Load() != nil {
+	err := godotenv.Load(path.Join(os.Getenv("HOME"), ".env"))
+	if err != nil {
 		log.Fatal("Error occurred loading .env file")
 	}
 	if os.Getenv("DEBUG") == "1" {
@@ -173,7 +175,7 @@ func scanTeam() ([]hoop_watcher.NBATeam, error) {
 }
 
 func newYoutubeClient() *youtube.Service {
-	err := godotenv.Load()
+	err := godotenv.Load(path.Join(os.Getenv("HOME"), ".env"))
 	if err != nil {
 		log.Fatal("Error occurred loading .env file")
 	}
