@@ -81,9 +81,12 @@ func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, er
 
 func runCLI() {
 	useTui, date, teams, err := parseFlags()
-	_, err = hoop_watcher.NewHoopWatcherDB("hoop-watcher-cli.db")
+	db, err := hoop_watcher.NewHoopWatcherDB("hoop-watcher-cli.db")
 	if err != nil {
 		log.Fatal("Error occurred setting up DB")
+	}
+	if db.InitData(teamFilePath) != nil {
+		log.Fatal("Error occurred initializing data in DB")
 	}
 	if useTui {
 		runTUI()
