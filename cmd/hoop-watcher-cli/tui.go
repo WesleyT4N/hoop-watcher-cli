@@ -36,7 +36,7 @@ func (i Team) Title() string       { return i.team.Abbreviation }
 func (i Team) Description() string { return i.team.Name }
 
 func initList() list.Model {
-	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
+	allTeams := hoop_watcher.GetNBATeamsFromJSON(teamFilePath)
 	var items []list.Item
 	for _, team := range allTeams {
 		items = append(items, Team{

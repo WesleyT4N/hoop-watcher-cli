@@ -10,15 +10,17 @@ import (
 )
 
 type NBATeam struct {
+	Id           int
 	Name         string
 	Abbreviation string
+	IsFavorited  bool
 }
 
 const TeamFileName = "nba_teams.json"
 
 const teamFileLoadErrorMessage = "Error occurred loading NBA teams"
 
-func GetNBATeams(filePath string) []NBATeam {
+func GetNBATeamsFromJSON(filePath string) []NBATeam {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(teamFileLoadErrorMessage)

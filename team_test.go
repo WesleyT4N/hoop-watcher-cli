@@ -12,7 +12,7 @@ var teamFilePath = "./" + hoop_watcher.TeamFileName
 
 func TestGetTeams(t *testing.T) {
 	t.Run("it loads teams JSON file", func(t *testing.T) {
-		teams := hoop_watcher.GetNBATeams(teamFilePath)
+		teams := hoop_watcher.GetNBATeamsFromJSON(teamFilePath)
 		if len(teams) != NUMBER_OF_NBA_TEAMS {
 			t.Errorf("expected %d number of teams but loaded %d", len(teams), NUMBER_OF_NBA_TEAMS)
 		}
@@ -58,7 +58,7 @@ func TestGetTeamFromQuery(t *testing.T) {
 			},
 		}
 		for _, c := range cases {
-			got := hoop_watcher.GetTeamFromQuery(c.Query, hoop_watcher.GetNBATeams(teamFilePath))
+			got := hoop_watcher.GetTeamFromQuery(c.Query, hoop_watcher.GetNBATeamsFromJSON(teamFilePath))
 			want := c.ExpectedTeamName
 			if got == nil {
 				t.Errorf("got %v want %s", got, want)
@@ -107,7 +107,7 @@ func TestFuzzyGetTeamFromQuery(t *testing.T) {
 			},
 		}
 		for _, c := range cases {
-			got := hoop_watcher.FuzzyGetTeamFromQuery(c.Query, hoop_watcher.GetNBATeams(teamFilePath))
+			got := hoop_watcher.FuzzyGetTeamFromQuery(c.Query, hoop_watcher.GetNBATeamsFromJSON(teamFilePath))
 			want := c.ExpectedTeamName
 			if got == nil {
 				t.Errorf("got %v want %s", got, want)
