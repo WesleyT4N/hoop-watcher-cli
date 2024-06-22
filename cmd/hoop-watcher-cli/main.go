@@ -62,25 +62,47 @@ func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
 	return teams, nil
 }
 
-func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, err error) {
+func parseFavoriteTeams(favoriteStr string) (favoriteTeams []int, err error) {
+	trimmedFavoriteStr := strings.TrimSpace(favoriteStr)
+	if trimmedFavoriteStr == "" {
+		return nil, nil
+	}
+	rawFavoriteTeams := strings.Split(trimmedFavoriteStr, ",")
+	for _, favoriteTeam := range rawFavoriteTeams {
+		parsedFavoriteTeam, err := strconv.Atoi(favoriteTeam)
+		if err != nil {
+			return nil, fmt.Errorf("Invalid team id")
+		}
+		favoriteTeams = append(favoriteTeams, parsedFavoriteTeam)
+	}
+	return favoriteTeams, nil
+}
+
+func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, favTeams []int, err error) {
 	tuiArg := flag.Bool("tui", false, "Use the TUI")
 	dateArg := flag.String("d", "", "Date of the highlights to fetch in the format YYYY-MM-DD")
 	teamsArg := flag.String("tm", "", "Which teams are playing (max 2) joined by ','")
+	favoriteArg := flag.String("f", "", "Favorite the team inputted")
 	flag.Parse()
 
 	date, dateErr := parseDate(*dateArg)
 	if dateErr != nil {
-		return *tuiArg, date, teams, dateErr
+		return *tuiArg, date, teams, favTeams, dateErr
 	}
 	teams, teamErr := parseTeams(*teamsArg)
 	if teamErr != nil {
-		return *tuiArg, date, teams, teamErr
+		return *tuiArg, date, teams, favTeams, teamErr
 	}
-	return *tuiArg, date, teams, nil
+	favTeams, favTeamErr := parseFavoriteTeams(*favoriteArg)
+	if favTeamErr != nil {
+		return *tuiArg, date, teams, favTeams, favTeamErr
+	}
+
+	return *tuiArg, date, teams, favTeams, nil
 }
 
 func runCLI() {
-	useTui, date, teams, err := parseFlags()
+	useTui, date, teams, favTeams, err := parseFlags()
 	db, err := hoop_watcher.NewHoopWatcherDB("hoop-watcher-cli.db")
 	if err != nil {
 		log.Fatal("Error occurred setting up DB")
@@ -101,9 +123,25 @@ func runCLI() {
 		os.Exit(1)
 	}
 
-	if len(teams) == 0 {
-		allTeams, err := db.GetAllTeams()
+	allTeams, err := db.GetAllTeams()
+	allTeamsById := make(map[int]hoop_watcher.NBATeam)
+	for _, team := range allTeams {
+		allTeamsById[team.Id] = team
+	}
 
+	if len(favTeams) > 0 {
+		fmt.Println("Favorited the following teams:")
+		for _, teamId := range favTeams {
+			if err := db.SetTeamFavorite(teamId, true); err != nil {
+				fmt.Println("Error occurred setting team as favorite")
+				os.Exit(1)
+			}
+			fmt.Println(allTeamsById[teamId].Name)
+		}
+		return
+	}
+
+	if len(teams) == 0 {
 		teams, err = scanTeam(allTeams)
 		if err != nil {
 			fmt.Println(err.Error())

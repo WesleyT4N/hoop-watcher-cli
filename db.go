@@ -96,3 +96,15 @@ func (h *HoopWatcherDB) GetAllTeams() ([]NBATeam, error) {
 	}
 	return teams, nil
 }
+
+func (h *HoopWatcherDB) SetTeamFavorite(teamId int, favorite bool) error {
+	stmt, err := h.db.Prepare("UPDATE teams SET is_favorited = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(favorite, teamId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
