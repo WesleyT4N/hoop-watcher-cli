@@ -52,7 +52,7 @@ func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
 	if len(rawTeams) > 2 {
 		return nil, fmt.Errorf("Invalid number of teams given")
 	}
-	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
+	allTeams := hoop_watcher.GetNBATeamsFromJSON(teamFilePath)
 	for _, team := range rawTeams {
 		parsedTeam := hoop_watcher.GetTeamFromQuery(team, allTeams)
 		if parsedTeam != nil {
@@ -102,7 +102,9 @@ func runCLI() {
 	}
 
 	if len(teams) == 0 {
-		teams, err = scanTeam()
+		allTeams, err := db.GetAllTeams()
+
+		teams, err = scanTeam(allTeams)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -162,7 +164,7 @@ func openHighlight(highlights []url.URL) error {
 	return nil
 }
 
-func scanTeam() ([]hoop_watcher.NBATeam, error) {
+func scanTeam(allTeams []hoop_watcher.NBATeam) ([]hoop_watcher.NBATeam, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Print("Enter the NBA team you want to get highlights for:\n> ")
@@ -172,7 +174,6 @@ func scanTeam() ([]hoop_watcher.NBATeam, error) {
 	}
 
 	team := scanner.Text()
-	allTeams := hoop_watcher.GetNBATeams(teamFilePath)
 
 	parsedTeam := hoop_watcher.FuzzyGetTeamFromQuery(team, allTeams)
 	if parsedTeam == nil {
