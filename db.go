@@ -61,7 +61,7 @@ func (h *HoopWatcherDB) addTeam(name, abbrev string) error {
 }
 
 func (h *HoopWatcherDB) addAllTeams(filePath string) error {
-	teams := GetNBATeams(filePath)
+	teams := GetNBATeamsFromJSON(filePath)
 	for _, team := range teams {
 		if err := h.addTeam(team.Name, team.Abbreviation); err != nil {
 			return err
@@ -75,4 +75,24 @@ func (h *HoopWatcherDB) InitData(teamFilePath string) error {
 		return err
 	}
 	return nil
+}
+
+func (h *HoopWatcherDB) GetAllTeams() ([]NBATeam, error) {
+	rows, err := h.db.Query("SELECT * FROM teams")
+	if err != nil {
+		return []NBATeam{}, err
+	}
+	defer rows.Close()
+
+	teams := []NBATeam{}
+	for rows.Next() {
+		var id int
+		var name, abbrev string
+		var isFavorited bool
+		if err := rows.Scan(&id, &name, &abbrev, &isFavorited); err != nil {
+			return []NBATeam{}, err
+		}
+		teams = append(teams, NBATeam{Id: id, Name: name, Abbreviation: abbrev, IsFavorited: isFavorited})
+	}
+	return teams, nil
 }
