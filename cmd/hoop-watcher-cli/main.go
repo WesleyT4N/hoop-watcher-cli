@@ -43,7 +43,7 @@ func parseDate(dateStr string) (time.Time, error) {
 	return time.Now(), fmt.Errorf("Invalid date")
 }
 
-func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
+func parseTeams(teamStr string, availableTeams []hoop_watcher.NBATeam) (teams []hoop_watcher.NBATeam, err error) {
 	trimmedTeamStr := strings.TrimSpace(teamStr)
 	if trimmedTeamStr == "" {
 		return nil, nil
@@ -52,9 +52,9 @@ func parseTeams(teamStr string) (teams []hoop_watcher.NBATeam, err error) {
 	if len(rawTeams) > 2 {
 		return nil, fmt.Errorf("Invalid number of teams given")
 	}
-	allTeams := hoop_watcher.GetNBATeamsFromJSON(teamFilePath)
+
 	for _, team := range rawTeams {
-		parsedTeam := hoop_watcher.GetTeamFromQuery(team, allTeams)
+		parsedTeam := hoop_watcher.GetTeamFromQuery(team, availableTeams)
 		if parsedTeam != nil {
 			teams = append(teams, *parsedTeam)
 		}
@@ -78,7 +78,7 @@ func parseFavoriteTeams(favoriteStr string) (favoriteTeams []int, err error) {
 	return favoriteTeams, nil
 }
 
-func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, favTeams []int, err error) {
+func parseFlags(availableTeams []hoop_watcher.NBATeam) (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, favTeams []int, err error) {
 	tuiArg := flag.Bool("tui", false, "Use the TUI")
 	dateArg := flag.String("d", "", "Date of the highlights to fetch in the format YYYY-MM-DD")
 	teamsArg := flag.String("tm", "", "Which teams are playing (max 2) joined by ','")
@@ -89,7 +89,7 @@ func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, fa
 	if dateErr != nil {
 		return *tuiArg, date, teams, favTeams, dateErr
 	}
-	teams, teamErr := parseTeams(*teamsArg)
+	teams, teamErr := parseTeams(*teamsArg, availableTeams)
 	if teamErr != nil {
 		return *tuiArg, date, teams, favTeams, teamErr
 	}
@@ -102,14 +102,20 @@ func parseFlags() (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, fa
 }
 
 func runCLI() {
-	useTui, date, teams, favTeams, err := parseFlags()
 	db, err := hoop_watcher.NewHoopWatcherDB("hoop-watcher-cli.db")
+	allTeams := hoop_watcher.GetNBATeamsFromDB(db)
+	allTeamsById := make(map[int]hoop_watcher.NBATeam)
+	for _, team := range allTeams {
+		allTeamsById[team.Id] = team
+	}
+
 	if err != nil {
 		log.Fatal("Error occurred setting up DB")
 	}
 	if db.InitData(teamFilePath) != nil {
 		log.Fatal("Error occurred initializing data in DB")
 	}
+	useTui, date, teams, favTeams, err := parseFlags(allTeams)
 	if useTui {
 		runTUI()
 		return
@@ -121,12 +127,6 @@ func runCLI() {
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
-	}
-
-	allTeams, err := db.GetAllTeams()
-	allTeamsById := make(map[int]hoop_watcher.NBATeam)
-	for _, team := range allTeams {
-		allTeamsById[team.Id] = team
 	}
 
 	if len(favTeams) > 0 {

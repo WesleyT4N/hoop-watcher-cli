@@ -45,8 +45,10 @@ func TestParseDate(t *testing.T) {
 }
 
 func TestParseTeams(t *testing.T) {
+	availableTeams := hoop_watcher.GetNBATeamsFromJSON(teamFilePath)
+
 	t.Run("parses two team string into NBATeam", func(t *testing.T) {
-		got, err := parseTeams("knicks,grizzlies")
+		got, err := parseTeams("knicks,grizzlies", availableTeams)
 		if err != nil {
 			t.Fatalf("Found err: %v", err)
 		}
@@ -65,7 +67,7 @@ func TestParseTeams(t *testing.T) {
 		}
 	})
 	t.Run("parses singular team string into NBATeam", func(t *testing.T) {
-		got, err := parseTeams("knicks")
+		got, err := parseTeams("knicks", availableTeams)
 		if err != nil {
 			t.Fatalf("Found err: %v", err)
 		}
@@ -81,7 +83,7 @@ func TestParseTeams(t *testing.T) {
 		}
 	})
 	t.Run("returns error on more than 2 teams", func(t *testing.T) {
-		_, err := parseTeams("knicks,knicks,knicks")
+		_, err := parseTeams("knicks,knicks,knicks", availableTeams)
 		if err == nil {
 			t.Fatal("Expected error but found none")
 		}
@@ -92,7 +94,7 @@ func TestParseTeams(t *testing.T) {
 		}
 	})
 	t.Run("returns nil on 0 teams", func(t *testing.T) {
-		got, err := parseTeams("")
+		got, err := parseTeams("", availableTeams)
 		if err != nil {
 			t.Fatalf("Found err: %v", err)
 		}
