@@ -97,6 +97,15 @@ func (h *HoopWatcherDB) GetAllTeams() ([]NBATeam, error) {
 	return teams, nil
 }
 
+func (h *HoopWatcherDB) GetTeamByAbbrev(abbrev string) (NBATeam, error) {
+	var team NBATeam
+	row := h.db.QueryRow("SELECT * FROM teams WHERE abbrev = ?", abbrev)
+	if err := row.Scan(&team.Id, &team.Name, &team.Abbreviation, &team.IsFavorited); err != nil {
+		return NBATeam{}, err
+	}
+	return team, nil
+}
+
 func (h *HoopWatcherDB) SetTeamFavorite(teamId int, favorite bool) error {
 	stmt, err := h.db.Prepare("UPDATE teams SET is_favorited = ? WHERE id = ?")
 	if err != nil {

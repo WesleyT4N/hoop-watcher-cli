@@ -10,10 +10,10 @@ import (
 )
 
 type NBATeam struct {
-	Id           int
-	Name         string
-	Abbreviation string
-	IsFavorited  bool
+	Id           int    `json:"id"`
+	Name         string `json:"name"`
+	Abbreviation string `json:"abbreviation"`
+	IsFavorited  bool   `json:"is_favorited"`
 }
 
 const TeamFileName = "nba_teams.json"
