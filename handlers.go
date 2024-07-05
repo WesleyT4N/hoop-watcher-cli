@@ -8,10 +8,10 @@ import (
 )
 
 type BaseHandler struct {
-	db *HoopWatcherDB
+	db HoopWatcherDB
 }
 
-func NewBaseHandler(db *HoopWatcherDB) *BaseHandler {
+func NewBaseHandler(db HoopWatcherDB) *BaseHandler {
 	return &BaseHandler{db: db}
 }
 
@@ -20,7 +20,7 @@ func handleDBError(w http.ResponseWriter, err error) {
 		http.Error(w, "No results found", http.StatusNotFound)
 		return
 	}
-	log.Printf("DB Error occurred: %v", err)
+	log.Printf("Unknown error occurred: %v", err)
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
 

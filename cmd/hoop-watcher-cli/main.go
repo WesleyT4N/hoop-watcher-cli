@@ -102,7 +102,7 @@ func parseFlags(availableTeams []hoop_watcher.NBATeam) (useTui bool, date time.T
 }
 
 func runCLI() {
-	db, err := hoop_watcher.NewHoopWatcherDB("hoop-watcher-cli.db")
+	db, err := hoop_watcher.NewSqliteHoopWatcherDB("hoop-watcher-cli.db")
 	allTeams := hoop_watcher.GetNBATeamsFromDB(db)
 	allTeamsById := make(map[int]hoop_watcher.NBATeam)
 	for _, team := range allTeams {

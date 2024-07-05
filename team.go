@@ -36,7 +36,7 @@ func GetNBATeamsFromJSON(filePath string) []NBATeam {
 	return nbaTeams
 }
 
-func GetNBATeamsFromDB(db *HoopWatcherDB) []NBATeam {
+func GetNBATeamsFromDB(db HoopWatcherDB) []NBATeam {
 	nbaTeams, err := db.GetAllTeams()
 	if err != nil {
 		log.Fatal("Error occurred getting NBA teams from database")
