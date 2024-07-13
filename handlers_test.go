@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -19,13 +22,11 @@ func TestGetTeams(t *testing.T) {
 					Id:           1,
 					Name:         "Atlanta Hawks",
 					Abbreviation: "ATL",
-					IsFavorited:  false,
 				},
 				{
 					Id:           2,
 					Name:         "Boston Celtics",
 					Abbreviation: "BOS",
-					IsFavorited:  false,
 				},
 			}, nil
 		}
@@ -41,13 +42,11 @@ func TestGetTeams(t *testing.T) {
 				Id:           1,
 				Name:         "Atlanta Hawks",
 				Abbreviation: "ATL",
-				IsFavorited:  false,
 			},
 			{
 				Id:           2,
 				Name:         "Boston Celtics",
 				Abbreviation: "BOS",
-				IsFavorited:  false,
 			},
 		}
 
@@ -75,6 +74,11 @@ func TestGetTeams(t *testing.T) {
 	})
 
 	t.Run("500 if error occurs", func(t *testing.T) {
+		log.SetOutput(io.Discard)
+		defer func() {
+			log.SetOutput(os.Stderr)
+		}()
+
 		db := newMockDB()
 		db.getAllTeams = func() ([]NBATeam, error) {
 			return []NBATeam{}, errors.New("unknown error")
@@ -95,9 +99,10 @@ func TestGetTeams(t *testing.T) {
 }
 
 type mockHoopWatcherDB struct {
-	getAllTeams     func() ([]NBATeam, error)
-	getTeamByAbbrev func(abbrev string) (NBATeam, error)
-	setTeamFavorite func(id int, fav bool) error
+	getAllTeams       func() ([]NBATeam, error)
+	getTeamByAbbrev   func(abbrev string) (NBATeam, error)
+	setTeamFavorite   func(id int, fav bool) error
+	getTeamHighlights func(id int) ([]Highlight, error)
 }
 
 func (m *mockHoopWatcherDB) GetAllTeams() ([]NBATeam, error) {
@@ -112,6 +117,10 @@ func (m *mockHoopWatcherDB) SetTeamFavorite(id int, fav bool) error {
 	return m.setTeamFavorite(id, fav)
 }
 
+func (m *mockHoopWatcherDB) GetTeamHighlights(id int) ([]Highlight, error) {
+	return m.getTeamHighlights(id)
+}
+
 func newMockDB() *mockHoopWatcherDB {
 	return &mockHoopWatcherDB{
 		getAllTeams: func() ([]NBATeam, error) {
@@ -120,8 +129,8 @@ func newMockDB() *mockHoopWatcherDB {
 		getTeamByAbbrev: func(abbrev string) (NBATeam, error) {
 			return NBATeam{}, nil
 		},
-		setTeamFavorite: func(id int, fav bool) error {
-			return nil
+		getTeamHighlights: func(id int) ([]Highlight, error) {
+			return []Highlight{}, nil
 		},
 	}
 }

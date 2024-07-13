@@ -12,8 +12,11 @@ import (
 type NBATeam struct {
 	Id           int    `json:"id"`
 	Name         string `json:"name"`
+	FullName     string `json:"full_name"`
 	Abbreviation string `json:"abbreviation"`
-	IsFavorited  bool   `json:"is_favorited"`
+	City         string `json:"city"`
+	Conference   string `json:"conference"`
+	Division     string `json:"division"`
 }
 
 const TeamFileName = "nba_teams.json"
@@ -45,7 +48,7 @@ func GetNBATeamsFromDB(db HoopWatcherDB) []NBATeam {
 }
 
 func getTeamMatchTokens(team NBATeam) (teamToMatchTokens []string) {
-	lowerCaseTeamName := strings.ToLower(team.Name)
+	lowerCaseTeamName := strings.ToLower(team.FullName)
 	lowerCaseTeamAbbreviation := strings.ToLower(team.Abbreviation)
 	splitTeamName := strings.Split(lowerCaseTeamName, " ")
 	teamCity := strings.Join(splitTeamName[:len(splitTeamName)-1], " ")
@@ -60,7 +63,7 @@ func getTeamMatchTokens(team NBATeam) (teamToMatchTokens []string) {
 
 func queryMatchesTeam(query string, team NBATeam) bool {
 	lowerCaseQuery := strings.ToLower(query)
-	lowerCaseTeamName := strings.ToLower(team.Name)
+	lowerCaseTeamName := strings.ToLower(team.FullName)
 	lowerCaseTeamAbbreviation := strings.ToLower(team.Abbreviation)
 	if strings.Contains(lowerCaseQuery, lowerCaseTeamName) || lowerCaseQuery == lowerCaseTeamAbbreviation {
 		return true

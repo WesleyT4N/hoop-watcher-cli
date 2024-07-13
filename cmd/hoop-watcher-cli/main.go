@@ -78,27 +78,22 @@ func parseFavoriteTeams(favoriteStr string) (favoriteTeams []int, err error) {
 	return favoriteTeams, nil
 }
 
-func parseFlags(availableTeams []hoop_watcher.NBATeam) (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, favTeams []int, err error) {
+func parseFlags(availableTeams []hoop_watcher.NBATeam) (useTui bool, date time.Time, teams []hoop_watcher.NBATeam, err error) {
 	tuiArg := flag.Bool("tui", false, "Use the TUI")
 	dateArg := flag.String("d", "", "Date of the highlights to fetch in the format YYYY-MM-DD")
 	teamsArg := flag.String("tm", "", "Which teams are playing (max 2) joined by ','")
-	favoriteArg := flag.String("f", "", "Favorite the team inputted")
 	flag.Parse()
 
 	date, dateErr := parseDate(*dateArg)
 	if dateErr != nil {
-		return *tuiArg, date, teams, favTeams, dateErr
+		return *tuiArg, date, teams, dateErr
 	}
 	teams, teamErr := parseTeams(*teamsArg, availableTeams)
 	if teamErr != nil {
-		return *tuiArg, date, teams, favTeams, teamErr
-	}
-	favTeams, favTeamErr := parseFavoriteTeams(*favoriteArg)
-	if favTeamErr != nil {
-		return *tuiArg, date, teams, favTeams, favTeamErr
+		return *tuiArg, date, teams, teamErr
 	}
 
-	return *tuiArg, date, teams, favTeams, nil
+	return *tuiArg, date, teams, nil
 }
 
 func runCLI() {
@@ -115,7 +110,7 @@ func runCLI() {
 	if db.InitData(teamFilePath) != nil {
 		log.Fatal("Error occurred initializing data in DB")
 	}
-	useTui, date, teams, favTeams, err := parseFlags(allTeams)
+	useTui, date, teams, err := parseFlags(allTeams)
 	if useTui {
 		runTUI()
 		return
@@ -127,18 +122,6 @@ func runCLI() {
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
-	}
-
-	if len(favTeams) > 0 {
-		fmt.Println("Favorited the following teams:")
-		for _, teamId := range favTeams {
-			if err := db.SetTeamFavorite(teamId, true); err != nil {
-				fmt.Println("Error occurred setting team as favorite")
-				os.Exit(1)
-			}
-			fmt.Println(allTeamsById[teamId].Name)
-		}
-		return
 	}
 
 	if len(teams) == 0 {

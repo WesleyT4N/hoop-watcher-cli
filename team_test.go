@@ -63,8 +63,8 @@ func TestGetTeamFromQuery(t *testing.T) {
 			if got == nil {
 				t.Errorf("got %v want %s", got, want)
 			}
-			if got.Name != want {
-				t.Errorf("got %v want %s", got.Name, want)
+			if got.FullName != want {
+				t.Errorf("got %v want %s", got.FullName, want)
 			}
 		}
 	})
@@ -112,8 +112,8 @@ func TestFuzzyGetTeamFromQuery(t *testing.T) {
 			if got == nil {
 				t.Errorf("got %v want %s", got, want)
 			}
-			if got.Name != want {
-				t.Errorf("got %v want %s with query %s", got.Name, want, c.Query)
+			if got.FullName != want {
+				t.Errorf("got %v want %s with query %s", got.FullName, want, c.Query)
 			}
 		}
 	})

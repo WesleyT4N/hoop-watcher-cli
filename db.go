@@ -2,17 +2,20 @@ package hoop_watcher
 
 import (
 	"database/sql"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 const initDB = `
 CREATE TABLE IF NOT EXISTS teams(
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    abbrev TEXT NOT NULL,
-    is_favorited BOOLEAN NOT NULL DEFAULT FALSE,
-	UNIQUE(name, abbrev)
+	full_name TEXT NOT NULL,
+    abbreviation TEXT NOT NULL,
+	city TEXT NOT NULL,
+	conference TEXT NOT NULL,
+	division TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS games(
@@ -33,7 +36,7 @@ CREATE TABLE IF NOT EXISTS game_highlights(
 type HoopWatcherDB interface {
 	GetAllTeams() ([]NBATeam, error)
 	GetTeamByAbbrev(abbrev string) (NBATeam, error)
-	SetTeamFavorite(teamId int, favorite bool) error
+	GetTeamHighlights(teamId int) ([]Highlight, error)
 }
 
 type SqliteHoopWatcherDB struct {
@@ -56,20 +59,15 @@ func (h *SqliteHoopWatcherDB) Close() error {
 	return h.db.Close()
 }
 
-func (h *SqliteHoopWatcherDB) addTeam(name, abbrev string) error {
-	// prepared statement
-	stmt, err := h.db.Prepare("INSERT OR IGNORE INTO teams(name, abbrev) VALUES(?, ?)")
+func (h *SqliteHoopWatcherDB) addAllTeams(filePath string) error {
+	teams := GetNBATeamsFromJSON(filePath)
+	stmt, err := h.db.Prepare("INSERT OR IGNORE INTO teams(id, name, full_name, abbreviation, city, conference, division) VALUES (?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(name, abbrev)
-	return err
-}
-
-func (h *SqliteHoopWatcherDB) addAllTeams(filePath string) error {
-	teams := GetNBATeamsFromJSON(filePath)
 	for _, team := range teams {
-		if err := h.addTeam(team.Name, team.Abbreviation); err != nil {
+		_, err = stmt.Exec(team.Id, team.Name, team.FullName, team.Abbreviation, team.City, team.Conference, team.Division)
+		if err != nil {
 			return err
 		}
 	}
@@ -92,34 +90,32 @@ func (h *SqliteHoopWatcherDB) GetAllTeams() ([]NBATeam, error) {
 
 	teams := []NBATeam{}
 	for rows.Next() {
-		var id int
-		var name, abbrev string
-		var isFavorited bool
-		if err := rows.Scan(&id, &name, &abbrev, &isFavorited); err != nil {
+		team := NBATeam{}
+		if err := rows.Scan(
+			&team.Id,
+			&team.Name,
+			&team.FullName,
+			&team.Abbreviation,
+			&team.City,
+			&team.Conference,
+			&team.Division,
+		); err != nil {
 			return []NBATeam{}, err
 		}
-		teams = append(teams, NBATeam{Id: id, Name: name, Abbreviation: abbrev, IsFavorited: isFavorited})
+		teams = append(teams, team)
 	}
 	return teams, nil
 }
 
 func (h *SqliteHoopWatcherDB) GetTeamByAbbrev(abbrev string) (NBATeam, error) {
 	var team NBATeam
-	row := h.db.QueryRow("SELECT * FROM teams WHERE abbrev = ?", abbrev)
-	if err := row.Scan(&team.Id, &team.Name, &team.Abbreviation, &team.IsFavorited); err != nil {
+	row := h.db.QueryRow("SELECT * FROM teams WHERE abbrev = ?", strings.ToUpper(abbrev))
+	if err := row.Scan(&team.Id, &team.Name, &team.Abbreviation); err != nil {
 		return NBATeam{}, err
 	}
 	return team, nil
 }
 
-func (h *SqliteHoopWatcherDB) SetTeamFavorite(teamId int, favorite bool) error {
-	stmt, err := h.db.Prepare("UPDATE teams SET is_favorited = ? WHERE id = ?")
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(favorite, teamId)
-	if err != nil {
-		return err
-	}
-	return nil
+func (h *SqliteHoopWatcherDB) GetTeamHighlights(id int) ([]Highlight, error) {
+	return []Highlight{}, nil
 }

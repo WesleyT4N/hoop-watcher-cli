@@ -52,3 +52,25 @@ func (h *BaseHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, team)
 }
+
+func (h *BaseHandler) GetTeamHighlights(w http.ResponseWriter, r *http.Request) {
+	abbrev := r.PathValue("abbrev")
+	team, err := h.db.GetTeamByAbbrev(abbrev)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	date := r.URL.Query().Get("date")
+	if date == "" {
+		http.Error(w, "Missing date query parameter", http.StatusBadRequest)
+		return
+	}
+
+	highlights, err := h.db.GetTeamHighlights(team.Id)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+	writeJSON(w, highlights)
+}
